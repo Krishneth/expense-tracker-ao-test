@@ -1,5 +1,8 @@
 "use client";
+import { useState } from "react";
 import { Expense } from "@/lib/types";
+
+const CATEGORIES = ["All", "Food", "Transport", "Utilities", "Entertainment", "Other"];
 
 interface Props {
   expenses: Expense[];
@@ -7,18 +10,37 @@ interface Props {
 }
 
 export default function ExpenseList({ expenses, onDelete }: Props) {
+  const [filterCategory, setFilterCategory] = useState("All");
+
   async function handleDelete(id: string) {
     await fetch(`/api/expenses/${id}`, { method: "DELETE" });
     onDelete(id);
   }
 
-  if (expenses.length === 0) {
-    return <p className="text-gray-500 text-sm">No expenses yet.</p>;
-  }
+  const filtered =
+    filterCategory === "All"
+      ? expenses
+      : expenses.filter((e) => e.category === filterCategory);
 
   return (
-    <ul className="flex flex-col gap-2">
-      {expenses.map((e) => (
+    <div className="flex flex-col gap-3">
+      <select
+        value={filterCategory}
+        onChange={(e) => setFilterCategory(e.target.value)}
+        className="self-start border rounded px-3 py-1.5 text-sm"
+      >
+        {CATEGORIES.map((cat) => (
+          <option key={cat} value={cat}>
+            {cat}
+          </option>
+        ))}
+      </select>
+
+      {filtered.length === 0 ? (
+        <p className="text-gray-500 text-sm">No expenses yet.</p>
+      ) : (
+        <ul className="flex flex-col gap-2">
+          {filtered.map((e) => (
         <li
           key={e.id}
           className="flex items-center justify-between bg-white rounded shadow px-4 py-3"
@@ -38,7 +60,9 @@ export default function ExpenseList({ expenses, onDelete }: Props) {
             </button>
           </div>
         </li>
-      ))}
-    </ul>
+          ))}
+        </ul>
+      )}
+    </div>
   );
 }
